@@ -1,5 +1,5 @@
 
-Set n /n1*n15/;
+Set n /n1*n15, dummy/;
 Set s /a1/;
 
 Parameter fcost(i, j) /
@@ -57,12 +57,11 @@ $offdelim
 
 
 Parameter proof_size(n);
-
 proof_size(n) = uniformInt(1,20);
 
 Parameter supply(n) /
 
-    n1      50
+    n1       1
     n2       0
     n3       0
     n4       0
@@ -76,7 +75,8 @@ Parameter supply(n) /
     n12      0
     n13      0
     n14      0
-    n15    -50
+    n15     -1
+    dummy    0
 
 /;
 

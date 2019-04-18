@@ -15,18 +15,29 @@ arc(i,j) = no;
 
 arc(i,j) = yes$(fcost(i,j) gt 0);
 
+set destination(n);
 
-positive variable path(n,n);
+destination(n) = supply(n)$(supply(n) lt 0);
 
-positive variable val(i,j);
+supply(destination) = 0;
+
+supply("dummy") = -1;
+
+arc(destination, "dummy") = yes;
+
+fcost(destination, "dummy") = 150;
+
+binary variable path(n,n);
+
+
+positive variables val(i,j);
 
 free variables total_cost;
 
 
 Equations
 objEq,
-balance(i),
-eq1(i,j);
+balance(i);
 *proof_size_constraint(i);
 
 
@@ -36,23 +47,20 @@ total_cost =e= sum((i,j)$(arc(i,j)), fcost(i,j)*path(i,j)*proof_size(i));
 
 
 balance(i)..
-sum(j$(arc(i,j)), val(i,j)) - sum(k$(arc(k,i)), val(k,i)) =e= supply(i);
+sum(j$(arc(i,j)), path(i,j)) - sum(k$(arc(k,i)), path(k,i)) =e= supply(i);
 
 
-eq1(i,j)$(val(i,j) gt 49)..
-path(i,j) =e= 1;
 
 *proof_size_constraint(i)..
 *sum(j, path(i,j)*proof_size(j)*fcost(i,j)) =l= sum(j, proof_size(j));
 
-
-
 model cool /all/;
 
 
-solve cool using lp minimizing total_cost;
+solve cool using mip minimizing total_cost;
 
+display proof_size;
 
-
+display destination;
 
 
