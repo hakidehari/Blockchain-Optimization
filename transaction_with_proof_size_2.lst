@@ -1,0 +1,2000 @@
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 1
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+   1   
+   2  Set
+   3          n 'nodes',
+   4          Arcs( n, n ) 'Set of arcs in the network'
+   5  ;
+   6   
+   7  Alias
+   8          ( n, i, j, k );
+   9   
+  10  Parameter
+  11          proof_size(n),
+  12          supply(n)
+  13  ;
+  14   
+  15   
+  16  Scalar Source 'The Source of the transaction'  /5/;
+  17   
+  18  Scalar Destination 'The destination of the transaction' /-5/;
+  19   
+INCLUDE    /home/nouroudine/Documents/Spring_2019/Optimization/research_implementation/nodes_2.inc
+  21   
+  22  Set n /n1*n15/;
+  23  Set s /a1/;
+  24   
+  25  Parameter fcost(i, j) /
+  27      n1      n2      50
+  28      n2      n1      50
+  29      n1      n3      50
+  30      n3      n1      50
+  31      n1      n4      50
+  32      n4      n1      50
+  33      n2      n5      50
+  34      n5      n2      50
+  35      n2      n6      50
+  36      n6      n2      50
+  37      n3      n7      50
+  38      n7      n3      50
+  39      n4      n7      50
+  40      n7      n4      50
+  41      n4      n8      50
+  42      n8      n4      50
+  43      n5      n6      50
+  44      n6      n5      50
+  45      n5      n9      50
+  46      n9      n5      50
+  47      n6      n11     50
+  48      n11      n6     50
+  49      n6      n10     50
+  50      n10      n6     50
+  51      n7      n12     50
+  52      n12      n7     50
+  53      n8      n13     50
+  54      n13      n8     50
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 2
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+  55      n9      n12     50
+  56      n12      n9     50
+  57      n10      n13    50
+  58      n13      n10    50
+  59      n11      n14    50
+  60      n14      n11    50
+  61      n11      n15    50
+  62      n15      n11    50
+  63      n12      n14    50
+  64      n14      n12    50
+  65      n13      n14    50
+  66      n14      n13    50
+  67      n14      n15    50
+  68      n15      n14    50
+  70  /;
+  71   
+  72  Parameter
+  73          proof_size(n);
+  74   
+  75  Parameter supply(n) /
+  76   
+  77      n1       1
+  78      n2       0
+  79      n3       0
+  80      n4       0
+  81      n5       0
+  82      n6       0
+  83      n7       0
+  84      n8       0
+  85      n9       0
+  86      n10      0
+  87      n11      0
+  88      n12      0
+  89      n13      0
+  90      n14      0
+  91      n15     -1
+  92   
+  93  /;
+  94   
+  95  Arcs( i, j ) = no;
+  96  Arcs( i, j ) = yes$( fcost( i, j ) Gt 0 );
+  97   
+  98  proof_size( n ) = Uniformint( 1, 100 )$( Supply( n ) Lt 1 )
+  99   
+ 100  Binary Variable
+ 101          path( n, n );
+ 102   
+ 103  Free Variable
+ 104          CCPT    'Communication Cost Per Transaction'
+ 105  ;
+ 106   
+ 107  Equations
+ 108          Objective,
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 3
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+C o m p i l a t i o n
+
+
+ 109          Balance(i)
+ 110  ;
+ 111   
+ 112  Objective.. CCPT =e= sum(( i,j )$( Arcs( i, j )), fcost(i ,j) * path( i, j) * proof_size( i ));
+ 113   
+ 114  Balance( i ).. sum(j$(Arcs( i, j )), path( i, j ) ) - sum(k$(Arcs(k, i)), path(k,i) ) =e= supply( i );
+ 115   
+ 116  Model
+ 117          Shard /all/;
+ 118   
+ 119  Solve Shard using mip minimizing CCPT;
+ 120   
+ 121  Supply( i ) = 0;
+ 122   
+ 123  Display
+ 124          proof_size;
+ 125   
+ 126  Display
+ 127          fcost;
+ 128   
+ 129  Set
+ 130          iter / iter1*iter15 /
+ 131  ;
+ 132   
+ 133  Loop( iter,
+ 134   
+ 135          Supply(i)$ord(i) = Source = 5;
+ 136          Supply(i)$ord(i) =  Destination = -5;
+ 137   
+ 138          Solve Shard using mip minimizing CCPT;
+ 139   
+ 140  *       Display Supply;
+ 141   
+ 142  );
+ 143   
+ 144   
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 4
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Include File Summary
+
+
+   SEQ   GLOBAL TYPE      PARENT   LOCAL  FILENAME
+
+     1        1 INPUT          0       0  /home/nouroudine/Documents/Spring_2019/Optimization/research_implementation/transaction_with_proof_size_2.gms
+     2       20 INCLUDE        1      20  ./home/nouroudine/Documents/Spring_2019/Optimization/research_implementation/nodes_2.inc
+
+
+COMPILATION TIME     =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 5
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 119
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 0 ; (LHS = 0)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 0 ; (LHS = 0)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 6
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 119
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, 0)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 0, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 7
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 119
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.003 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.004 SECONDS      4 MB  25.1.3 r4e34d435fbd LEX-LEG
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 8
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 119
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  119
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      1 Optimal                   
+**** OBJECTIVE VALUE             4950.0000
+
+ RESOURCE USAGE, LIMIT          0.008      1000.000
+ ITERATION COUNT, LIMIT         3    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(101): integer optimal solution
+Cplex Time: 0.00sec (det. 0.42 ticks)
+Fixing integer variables, and solving final LP...
+Fixed MIP status(1): optimal
+Cplex Time: 0.00sec (det. 0.02 ticks)
+Proven optimal solution.
+
+MIP Solution:         4950.000000    (3 iterations, 0 nodes)
+Final Solve:          4950.000000    (0 iterations)
+
+Best possible:        4950.000000
+Absolute gap:            0.000000
+Relative gap:            0.000000
+
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- EQU Objective           .              .              .             1.0000      
+
+---- EQU Balance  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+n1          1.0000         1.0000         1.0000          .          
+n2           .              .              .              .          
+n3           .              .              .              .          
+n4           .              .              .              .          
+n5           .              .              .              .          
+n6           .              .              .              .          
+n7           .              .              .              .          
+n8           .              .              .              .          
+n9           .              .              .              .          
+n10          .              .              .              .          
+n11          .              .              .              .          
+n12          .              .              .              .          
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                                04/24/19 17:20:17 Page 9
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 119
+
+
+     EQU Balance  
+
+           LOWER          LEVEL          UPPER         MARGINAL
+
+n13          .              .              .              .          
+n14          .              .              .              .          
+n15        -1.0000        -1.0000        -1.0000          .          
+
+---- VAR path  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+n1 .n2           .             1.0000         1.0000         EPS         
+n1 .n3           .              .             1.0000         EPS         
+n1 .n4           .              .             1.0000         EPS         
+n2 .n1           .              .             1.0000       900.0000      
+n2 .n5           .              .             1.0000       900.0000      
+n2 .n6           .             1.0000         1.0000       900.0000      
+n3 .n1           .              .             1.0000      4250.0000      
+n3 .n7           .              .             1.0000      4250.0000      
+n4 .n1           .              .             1.0000      2800.0000      
+n4 .n7           .              .             1.0000      2800.0000      
+n4 .n8           .              .             1.0000      2800.0000      
+n5 .n2           .              .             1.0000      1550.0000      
+n5 .n6           .              .             1.0000      1550.0000      
+n5 .n9           .              .             1.0000      1550.0000      
+n6 .n2           .              .             1.0000      1500.0000      
+n6 .n5           .              .             1.0000      1500.0000      
+n6 .n10          .              .             1.0000      1500.0000      
+n6 .n11          .             1.0000         1.0000      1500.0000      
+n7 .n3           .              .             1.0000      1150.0000      
+n7 .n4           .              .             1.0000      1150.0000      
+n7 .n12          .              .             1.0000      1150.0000      
+n8 .n4           .              .             1.0000      1750.0000      
+n8 .n13          .              .             1.0000      1750.0000      
+n9 .n5           .              .             1.0000      4300.0000      
+n9 .n12          .              .             1.0000      4300.0000      
+n10.n6           .              .             1.0000       350.0000      
+n10.n13          .              .             1.0000       350.0000      
+n11.n6           .              .             1.0000      2550.0000      
+n11.n14          .              .             1.0000      2550.0000      
+n11.n15          .             1.0000         1.0000      2550.0000      
+n12.n7           .              .             1.0000      5000.0000      
+n12.n9           .              .             1.0000      5000.0000      
+n12.n14          .              .             1.0000      5000.0000      
+n13.n8           .              .             1.0000      2900.0000      
+n13.n10          .              .             1.0000      2900.0000      
+n13.n14          .              .             1.0000      2900.0000      
+n14.n11          .              .             1.0000      5000.0000      
+n14.n12          .              .             1.0000      5000.0000      
+n14.n13          .              .             1.0000      5000.0000      
+n14.n15          .              .             1.0000      5000.0000      
+n15.n11          .              .             1.0000      3850.0000      
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 10
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 119
+
+
+     VAR path  
+
+               LOWER          LEVEL          UPPER         MARGINAL
+
+n15.n14          .              .             1.0000      3850.0000      
+
+                           LOWER          LEVEL          UPPER         MARGINAL
+
+---- VAR CCPT              -INF         4950.0000        +INF             .          
+
+  CCPT  Communication Cost Per Transaction
+
+
+**** REPORT SUMMARY :        0     NONOPT
+                             0 INFEASIBLE
+                             0  UNBOUNDED
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 11
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+----    124 PARAMETER proof_size  
+
+n2   18.000,    n3   85.000,    n4   56.000,    n5   31.000,    n6   30.000,    n7   23.000,    n8   35.000,    n9   86.000,    n10   7.000,    n11  51.000,    n12 100.000,    n13  58.000,    n14 100.000,    n15  77.000
+
+
+----    127 PARAMETER fcost  
+
+             n1          n2          n3          n4          n5          n6          n7          n8          n9         n10         n11         n12         n13         n14         n15
+
+n1                   50.000      50.000      50.000
+n2       50.000                                          50.000      50.000
+n3       50.000                                                                  50.000
+n4       50.000                                                                  50.000      50.000
+n5                   50.000                                          50.000                              50.000
+n6                   50.000                              50.000                                                      50.000      50.000
+n7                               50.000      50.000                                                                                          50.000
+n8                                           50.000                                                                                                      50.000
+n9                                                       50.000                                                                              50.000
+n10                                                                  50.000                                                                              50.000
+n11                                                                  50.000                                                                                          50.000      50.000
+n12                                                                              50.000                  50.000                                                      50.000
+n13                                                                                          50.000                  50.000                                          50.000
+n14                                                                                                                              50.000      50.000      50.000                  50.000
+n15                                                                                                                              50.000                              50.000
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 12
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 13
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 14
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter1
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.004 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter1
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 15
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.006      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 16
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 17
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 18
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter2
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter2
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 19
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.006      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 20
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 21
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 22
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter3
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.024 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.024 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter3
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 23
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.004      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 24
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 25
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 26
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter4
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.193 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.195 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter4
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 27
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.008      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 28
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 29
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 30
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter5
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter5
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 31
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.004      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 32
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 33
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 34
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter6
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter6
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 35
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.003      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 36
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 37
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 38
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter7
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter7
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 39
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.017      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 40
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 41
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 42
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter8
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.090 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.092 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter8
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 43
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.005      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 44
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 45
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 46
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter9
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter9
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 47
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.005      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 48
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 49
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 50
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter10
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter10
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 51
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.003      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 52
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 53
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 54
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter11
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter11
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 55
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.003      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 56
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 57
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 58
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter12
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter12
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 59
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.004      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 60
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 61
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 62
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter13
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter13
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 63
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.015      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 64
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 65
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 66
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter14
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.002 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter14
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 67
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.004      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 68
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Equation Listing    SOLVE Shard Using MIP From line 138
+
+
+---- Objective  =E=  
+
+Objective..  - 900*path(n2,n1) - 900*path(n2,n5) - 900*path(n2,n6) - 4250*path(n3,n1) - 4250*path(n3,n7) - 2800*path(n4,n1) - 2800*path(n4,n7) - 2800*path(n4,n8) - 1550*path(n5,n2) - 1550*path(n5,n6) - 1550*path(n5,n9) - 1500*path(n6,n2)
+     
+      - 1500*path(n6,n5) - 1500*path(n6,n10) - 1500*path(n6,n11) - 1150*path(n7,n3) - 1150*path(n7,n4) - 1150*path(n7,n12) - 1750*path(n8,n4) - 1750*path(n8,n13) - 4300*path(n9,n5) - 4300*path(n9,n12) - 350*path(n10,n6) - 350*path(n10,n13)
+     
+      - 2550*path(n11,n6) - 2550*path(n11,n14) - 2550*path(n11,n15) - 5000*path(n12,n7) - 5000*path(n12,n9) - 5000*path(n12,n14) - 2900*path(n13,n8) - 2900*path(n13,n10) - 2900*path(n13,n14) - 5000*path(n14,n11) - 5000*path(n14,n12) - 5000*path(n14,n13)
+     
+      - 5000*path(n14,n15) - 3850*path(n15,n11) - 3850*path(n15,n14) + CCPT =E= 0 ; (LHS = 0)
+     
+
+---- Balance  =E=  
+
+Balance(n1)..  path(n1,n2) + path(n1,n3) + path(n1,n4) - path(n2,n1) - path(n3,n1) - path(n4,n1) =E= 1 ; (LHS = 1)
+     
+Balance(n2)..  - path(n1,n2) + path(n2,n1) + path(n2,n5) + path(n2,n6) - path(n5,n2) - path(n6,n2) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+Balance(n3)..  - path(n1,n3) + path(n3,n1) + path(n3,n7) - path(n7,n3) =E= 1 ; (LHS = 0, INFES = 1 ****)
+     
+REMAINING 12 ENTRIES SKIPPED
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 69
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Column Listing      SOLVE Shard Using MIP From line 138
+
+
+---- path  
+
+path(n1,n2)
+                (.LO, .L, .UP, .M = 0, 1, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n2)
+
+path(n1,n3)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n3)
+
+path(n1,n4)
+                (.LO, .L, .UP, .M = 0, 0, 1, EPS)
+        1       Balance(n1)
+       -1       Balance(n4)
+
+REMAINING 39 ENTRIES SKIPPED
+
+---- CCPT  Communication Cost Per Transaction
+
+CCPT
+                (.LO, .L, .UP, .M = -INF, 4950, +INF, 0)
+        1       Objective
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 70
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Model Statistics    SOLVE Shard Using MIP From line 138
+
+
+LOOPS                                 iter   iter15
+
+
+MODEL STATISTICS
+
+BLOCKS OF EQUATIONS           2     SINGLE EQUATIONS           16
+BLOCKS OF VARIABLES           2     SINGLE VARIABLES           43
+NON ZERO ELEMENTS           124     DISCRETE VARIABLES         42
+
+
+GENERATION TIME      =        0.001 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+EXECUTION TIME       =        0.003 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+               L O O P S               iter iter15
+
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 71
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+Solution Report     SOLVE Shard Using MIP From line 138
+
+
+               S O L V E      S U M M A R Y
+
+     MODEL   Shard               OBJECTIVE  CCPT
+     TYPE    MIP                 DIRECTION  MINIMIZE
+     SOLVER  CPLEX               FROM LINE  138
+
+**** SOLVER STATUS     1 Normal Completion         
+**** MODEL STATUS      10 Integer Infeasible       
+**** OBJECTIVE VALUE               NA
+
+ RESOURCE USAGE, LIMIT          0.003      1000.000
+ ITERATION COUNT, LIMIT         0    2000000000
+
+IBM ILOG CPLEX   25.1.3 r4e34d435fbd Released Oct 30, 2018 LEG x86 64bit/Linux
+Cplex 12.8.0.0
+
+Space for names approximately 0.00 Mb
+Use option 'names no' to turn use of names off
+MIP status(103): integer infeasible
+Cplex Time: 0.00sec (det. 0.06 ticks)
+Problem is integer infeasible.
+
+No solution returned
+GAMS 25.1.3  r4e34d435fbd Released Oct 30, 2018 LEX-LEG x86 64bit/Linux                                                                                                                                                               04/24/19 17:20:17 Page 72
+G e n e r a l   A l g e b r a i c   M o d e l i n g   S y s t e m
+E x e c u t i o n
+
+
+EXECUTION TIME       =        0.000 SECONDS      3 MB  25.1.3 r4e34d435fbd LEX-LEG
+
+
+USER: Course License: COMPSCI 735 - 01OPTIMIZATION:TEG181128/0001AO-GEN
+      University of Wisconsin-Whitewater, Department of MathematDC12896
+      License for teaching and research at degree granting institutions
+
+
+**** FILE SUMMARY
+
+Input      /home/nouroudine/Documents/Spring_2019/Optimization/research_implementation/transaction_with_proof_size_2.gms
+Output     /home/nouroudine/Documents/Spring_2019/Optimization/research_implementation/transaction_with_proof_size_2.lst
