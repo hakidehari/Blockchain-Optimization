@@ -54,18 +54,30 @@ Display
 	fcost;
 
 Set
-	iter / iter1*iter15 /
+        iter /1*15/,
+	used_nodes(n),
+	unused_nodes(n) /n1*n15/
+	shard1(n),
+	shard2(n),
+	shard3(n),
+	num_shards(shard1, shard2, shard3)
 ;
 
-Loop( iter, 
+scalar rando, count, s_index, d_index;
 
-	Supply(i)$ord(i) = Source = 5;
-	Supply(i)$ord(i) =  Destination = -5;  
-	
-	Solve Shard using mip minimizing CCPT;
-
-*	Display Supply;
-
+*Try the optimization for different supply and demand nodes
+Loop(iter,
+    s_index = uniformint(1, 15);
+    rando = uniformint(1,15);
+    d_index = rando$(s_index ne rando);
+    supply(i)$(ord(i) = s_index) = 1;
+    supply(i)$(ord(i) = d_index) = -1;
+    Solve Shard using mip minimizing CCPT;
+    display s_index, d_index;
+    display supply;
+    supply(i) = 0;
 );
+
+
 
 
