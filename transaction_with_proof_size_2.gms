@@ -62,7 +62,7 @@ Set
 	shard3(n)
 ;
 
-scalar rando, count, s_index, d_index, vari;
+scalar rando, count, s_index, d_index, shardLength;
 
 *Try the optimization for different supply and demand nodes
 $ontext
@@ -82,22 +82,22 @@ $offtext
 
 shard1(n) = no;
 count = 0;
-vari = card(shard1);
+shardLength = card(shard1);
 while(count < 50,
       rando = uniformint(1, 150);
       shard1(n) = yes$(ord(n) = rando);
-      display shard1;
+*     display shard1;
       used_nodes(n) = yes$(ord(n) = rando);
       unused_nodes(n) = no$(used_nodes(n));
       
-      if(card(shard1) = vari + 1,
-        count = card(;
-        vari = card(shard1);
+      if(card(shard1) = shardLength + 1,
+        shardLength = card(shard1);
+        count = shardLength;
       );
 );
 
 display shard1;
-display vari;
+display shardLength;
 
 
 
