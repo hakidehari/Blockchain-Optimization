@@ -149,7 +149,47 @@ display shardLength3;
 display used_nodes;
 display unused_nodes;
 
+supply(shard1) = 0;
+
+s_index = uniformint(1, 50);
+rando = uniformint(1,50);
+d_index = rando$(s_index ne rando);
+$offorder
+supply(shard1)$(ord(shard1) = s_index) = 1;
+supply(shard1)$(ord(shard1) = d_index) = -1;
+$onorder
+Solve Shard using mip minimizing CCPT;
+display s_index, d_index;
+display supply;
+supply(i) = 0;
 
 
+supply(shard2) = 0;
 
+s_index = uniformint(1, 50);
+rando = uniformint(1,50);
+d_index = rando$(s_index ne rando);
+$offorder
+supply(shard2)$(ord(shard2) = s_index) = 1;
+supply(shard2)$(ord(shard2) = d_index) = -1;
+$onorder
+Solve Shard using mip minimizing CCPT;
+display s_index, d_index;
+display supply;
+supply(i) = 0;
+
+
+supply(shard3) = 0;
+
+s_index = uniformint(1, 50);
+rando = uniformint(1,50);
+d_index = rando$(s_index ne rando);
+$offorder
+supply(shard3)$(ord(shard3) = s_index) = 1;
+supply(shard3)$(ord(shard3) = d_index) = -1;
+$onorder
+Solve Shard using mip minimizing CCPT;
+display s_index, d_index;
+display supply;
+supply(i) = 0;
 
