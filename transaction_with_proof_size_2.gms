@@ -56,19 +56,19 @@ Display
 Set
         iter /1*15/,
 	used_nodes(n),
-	unused_nodes(n) /n1*n15/
+	unused_nodes(n) /n1*n150/,
 	shard1(n),
 	shard2(n),
-	shard3(n),
-	num_shards(shard1, shard2, shard3)
+	shard3(n)
 ;
 
-scalar rando, count, s_index, d_index;
+scalar rando, count, s_index, d_index, vari;
 
 *Try the optimization for different supply and demand nodes
+$ontext
 Loop(iter,
-    s_index = uniformint(1, 15);
-    rando = uniformint(1,15);
+    s_index = uniformint(1, 150);
+    rando = uniformint(1,150);
     d_index = rando$(s_index ne rando);
     supply(i)$(ord(i) = s_index) = 1;
     supply(i)$(ord(i) = d_index) = -1;
@@ -77,6 +77,33 @@ Loop(iter,
     display supply;
     supply(i) = 0;
 );
+$offtext
+
+
+shard1(n) = no;
+count = 0;
+vari = card(shard1);
+while(count < 50,
+      rando = uniformint(1, 150);
+      shard1(n) = yes$(ord(n) = rando);
+      display shard1;
+      used_nodes(n) = yes$(ord(n) = rando);
+      unused_nodes(n) = no$(used_nodes(n));
+      
+      if(card(shard1) = vari + 1,
+        count = card(;
+        vari = card(shard1);
+      );
+);
+
+display shard1;
+display vari;
+
+
+
+
+
+
 
 
 
