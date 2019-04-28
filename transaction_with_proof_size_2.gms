@@ -62,10 +62,9 @@ Set
 	shard3(n)
 ;
 
-scalar rando, count, s_index, d_index, shardLength;
+scalar rando, count, s_index, d_index, shardLength, shardLength2, shardLength3;
 
 *Try the optimization for different supply and demand nodes
-$ontext
 Loop(iter,
     s_index = uniformint(1, 150);
     rando = uniformint(1,150);
@@ -77,18 +76,19 @@ Loop(iter,
     display supply;
     supply(i) = 0;
 );
-$offtext
 
 
+Set temp(n);
 shard1(n) = no;
 count = 0;
 shardLength = card(shard1);
 while(count < 50,
       rando = uniformint(1, 150);
-      shard1(n) = yes$(ord(n) = rando);
-*     display shard1;
-      used_nodes(n) = yes$(ord(n) = rando);
-      unused_nodes(n) = no$(used_nodes(n));
+      
+      temp(n) = yes$(ord(n) = rando);
+      shard1(temp) = yes;
+      used_nodes(temp) = yes;
+      unused_nodes(temp) = no;
       
       if(card(shard1) = shardLength + 1,
         shardLength = card(shard1);
@@ -98,11 +98,56 @@ while(count < 50,
 
 display shard1;
 display shardLength;
+display used_nodes;
+display unused_nodes;
+
+shard2(n) = no;
+count = 0;
+shardLength2 = card(shard2);
+while(count < 50,
+      rando = uniformint(1, 150);
+
+      temp(n) = yes$(ord(n) = rando);
+      shard2(unused_nodes(temp)) = yes;
+      used_nodes(temp) = yes;
+      unused_nodes(temp) = no;
+      
+      if(card(shard2) = shardLength2 + 1,
+        shardLength2 = card(shard2);
+        count = shardLength2;
+      );
+);
 
 
 
 
+display shard2;
+display shardLength2;
+display used_nodes;
+display unused_nodes;
 
+
+shard3(n) = no;
+count = 0;
+shardLength3 = card(shard3);
+while(count < 50,
+      rando = uniformint(1, 150);
+      
+      temp(n) = yes$(ord(n) = rando);
+      shard3(unused_nodes(temp)) = yes;
+      used_nodes(temp) = yes;
+      unused_nodes(temp) = no;
+      
+      if(card(shard3) = shardLength3 + 1,
+        shardLength3 = card(shard3);
+        count = shardLength3;
+      );
+);
+
+display shard3;
+display shardLength3;
+display used_nodes;
+display unused_nodes;
 
 
 
