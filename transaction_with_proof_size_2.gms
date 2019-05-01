@@ -36,7 +36,7 @@ Equations
 	Balance(i)
 ;
 
-Objective.. CCPT =e= sum(( i,j )$( Arcs( i, j )), fcost(i ,j) * path( i, j) * proof_size( i ));
+Objective.. CCPT =e= sum(( i,j )$( Arcs( i, j ) and fcost(i,j) gt 0), fcost(i ,j) * path( i, j) * proof_size( i ));
 
 Balance( i ).. sum(j$(Arcs( i, j )), path( i, j ) ) - sum(k$(Arcs(k, i)), path(k,i) ) =e= supply( i );
 
@@ -149,7 +149,19 @@ display shardLength3;
 display used_nodes;
 display unused_nodes;
 
+
+Parameter fcost2(i,j);
+fcost2(i,j) = fcost(i,j);
+
+
+*Solve for shard 1
 supply(shard1) = 0;
+alias(shard1, shard1p);
+
+Arcs(i,j) = no;
+Arcs(shard1, shard1p) = yes$(fcost(shard1, shard1p) gt 0);
+fcost(i, j) = no;
+fcost(shard1, shard1p)$(Arcs(shard1, shard1p)) = 50;
 
 s_index = uniformint(1, 50);
 rando = uniformint(1,50);
@@ -161,10 +173,20 @@ $onorder
 Solve Shard using mip minimizing CCPT;
 display s_index, d_index;
 display supply;
+display shard1;
 supply(i) = 0;
 
 
+
+*Solve for shard 2
+fcost(i,j) = fcost2(i,j);
 supply(shard2) = 0;
+alias(shard2, shard2p);
+
+Arcs(i,j) = no;
+Arcs(shard2, shard2p) = yes$(fcost(shard2, shard2p) gt 0);
+fcost(i, j) = no;
+fcost(shard2, shard2p)$(Arcs(shard2, shard2p)) = 50;
 
 s_index = uniformint(1, 50);
 rando = uniformint(1,50);
@@ -176,10 +198,20 @@ $onorder
 Solve Shard using mip minimizing CCPT;
 display s_index, d_index;
 display supply;
+display shard2;
 supply(i) = 0;
 
 
+
+*Solve for shard 3
+fcost(i,j) = fcost2(i,j);
 supply(shard3) = 0;
+alias(shard3, shard3p);
+
+Arcs(i,j) = no;
+Arcs(shard3, shard3p) = yes$(fcost(shard3, shard3p) gt 0);
+fcost(i, j) = no;
+fcost(shard3, shard3p)$(Arcs(shard3, shard3p)) = 50;
 
 s_index = uniformint(1, 50);
 rando = uniformint(1,50);
@@ -191,5 +223,6 @@ $onorder
 Solve Shard using mip minimizing CCPT;
 display s_index, d_index;
 display supply;
+display shard3;
 supply(i) = 0;
 
