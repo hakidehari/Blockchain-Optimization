@@ -79,6 +79,8 @@ Loop(iter,
 
 
 Set temp(n);
+
+*Randomly create the first shard
 shard1(n) = no;
 count = 0;
 shardLength = card(shard1);
@@ -96,11 +98,7 @@ while(count < 50,
       );
 );
 
-display shard1;
-display shardLength;
-display used_nodes;
-display unused_nodes;
-
+*Randomly create the second shard
 shard2(n) = no;
 count = 0;
 shardLength2 = card(shard2);
@@ -118,15 +116,7 @@ while(count < 50,
       );
 );
 
-
-
-
-display shard2;
-display shardLength2;
-display used_nodes;
-display unused_nodes;
-
-
+*Randomly create the third shard
 shard3(n) = no;
 count = 0;
 shardLength3 = card(shard3);
@@ -143,12 +133,6 @@ while(count < 50,
         count = shardLength3;
       );
 );
-
-display shard3;
-display shardLength3;
-display used_nodes;
-display unused_nodes;
-
 
 Parameter fcost2(i,j);
 fcost2(i,j) = fcost(i,j);
